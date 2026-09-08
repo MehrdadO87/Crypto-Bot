@@ -90,6 +90,24 @@ def register_handlers(bot: TeleBot):
 
     Use the buttons below to get started.""", reply_markup=markup)
 
+    @bot.message_handler(commands=['help'])
+    def help_handler(message):
+        if not is_user_member(bot, message.from_user.id):
+            bot.send_message(message.chat.id,"🔒 To use Crypto Mehrdad, please join our channel first.",reply_markup=join_channel_markup())
+            return
+        
+        message_help = ("📖 Help\n\n"
+        "💰 Check Prices\n"
+        "View the latest prices of the top 5 cryptocurrencies.\n\n"
+        "🔍 Search Coin\n"
+        "Search for any cryptocurrency by name or symbol.\n\n"
+        "💬 Contact Support\n"
+        "Contact our support team if you need help.\n\n"
+        "📝 Creat Account\n"
+        "Create your account by sharing your phone number.\n\n"
+        "👤 My Account\n"
+        "View your account information.\n\n")
+        bot.send_message(message.chat.id, message_help)
 
 
     @bot.message_handler(func=lambda message: message.text == "💬 Contact Support")
