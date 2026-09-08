@@ -2,14 +2,7 @@ import sqlite3
 from dotenv import load_dotenv
 import os
 import sqlite3
-from pathlib import Path
-
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-bot_db = BASE_DIR / "database.db"
-
-load_dotenv()
-bot_db = os.getenv("bot_db")
+from core.database import bot_db
 
 
 
@@ -67,3 +60,12 @@ def get_user_phone(user_id):
         return result[0]
 
     return None
+
+def delete_user(user_id):
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+
+    cursor.execute("DELETE FROM users WHERE user_id = ?", (user_id,))
+
+    conn.commit()
+    conn.close()
