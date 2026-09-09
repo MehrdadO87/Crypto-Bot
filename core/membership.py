@@ -1,5 +1,7 @@
 from telebot import types
+import logging
 
+logger = logging.getLogger(__name__)
 
 CHANNEL_ID = -1004205241131
 CHANNEL_USERNAME = "https://t.me/bottest12134"
@@ -8,8 +10,9 @@ CHANNEL_USERNAME = "https://t.me/bottest12134"
 def is_user_member(bot, user_id):
     try:
         member = bot.get_chat_member(CHANNEL_ID, user_id)
-        return member.status in ["member","administrator","creator"]
-    except Exception:
+        return member.status in ["member", "administrator", "creator"]
+    except Exception as e:
+        logger.warning(f"membership check failed for user_id={user_id}: {e}")
         return False
 
 

@@ -1,6 +1,7 @@
 import os
 import time
 import requests
+import threading
 
 COINGECKO_API_KEY = os.environ.get("COINGECKO_API_KEY")
 
@@ -11,25 +12,32 @@ HEADERS = {"x-cg-demo-api-key": COINGECKO_API_KEY}
 
 CACHE_TTL = 60
 
+_cache_lock = threading.Lock()
 cache = {}
 
+def _cleanup_expired():
+    now = time.time()
+    with _cache_lock:
+        expired = [k for k, (_, ts) in cache.items() if now - ts >= CACHE_TTL]
+        for k in expired:
+            del cache[k]
+
 def _get_cached(key):
-    if key not in cache:
+    with _cache_lock:
+        if key not in cache:
+            return None
+        data, timestamp = cache[key]
+        if time.time() - timestamp < CACHE_TTL:
+            return data
+        del cache[key]
         return None
 
-    data, timestamp = cache[key]
-
-    if time.time() - timestamp < CACHE_TTL:
-        return data
-
-    del cache[key]
-    return None
-
-
 def _set_cache(key, data):
-    cache[key] = (data, time.time())
+    with _cache_lock:
+        cache[key] = (data, time.time())
 
 def get_top_5_prices():
+    _cleanup_expired()
     cache_key = "top_5"
     cached_data = _get_cached(cache_key)
 

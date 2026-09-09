@@ -1,5 +1,4 @@
 import sqlite3
-from dotenv import load_dotenv
 import os
 import sqlite3
 from core.database import bot_db
@@ -62,7 +61,7 @@ def get_user_phone(user_id):
     return None
 
 def delete_user(user_id):
-    conn = sqlite3.connect("database.db")
+    conn = sqlite3.connect(bot_db)
     cursor = conn.cursor()
 
     cursor.execute("DELETE FROM users WHERE user_id = ?", (user_id,))

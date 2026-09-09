@@ -6,7 +6,9 @@ from api import (
 import core.query
 from core.membership import is_user_member, join_channel_markup
 import time
+import threading
 
+_last_request_lock = threading.Lock()
 user_last_request = {}
 
 
@@ -51,13 +53,15 @@ def register_handlers(bot: TeleBot):
         user_id = message.from_user.id
         now = time.time()
 
-        last_request = user_last_request.get(user_id)
+        with _last_request_lock:
+            last_request = user_last_request.get(user_id)
+            if last_request and now - last_request < 1:
+                return False
+            user_last_request[user_id] = now
 
-        if last_request and now - last_request < 1:
-            return False
-
-        user_last_request[user_id] = now
         return True
+
+    
     @bot.message_handler(commands=['start'])
     def start_handler(message):
         
@@ -166,6 +170,8 @@ def register_handlers(bot: TeleBot):
                 item for item in data
                 if item["id"] == coin_id
             )
+            if coin is None:
+                 continue
 
             price = coin["current_price"]
 

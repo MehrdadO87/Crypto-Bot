@@ -5,6 +5,7 @@ from bot.handlers import register_handlers
 import requests
 import core.database
 from core.query import *
+import logging
 
 
 
@@ -18,5 +19,5 @@ core.database.create_tables()
 
 register_handlers(bot)
 
-
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 bot.infinity_polling()
