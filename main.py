@@ -7,10 +7,13 @@ import core.database
 from core.query import *
 import logging
 
-
+class MyExceptionHandler(telebot.ExceptionHandler):
+    def handle(self, exception):
+        logging.exception("Unhandled error in handler")
+        return True
 
 API_TOKEN = os.environ.get("API_TOKEN")
-bot = telebot.TeleBot(API_TOKEN)
+bot = telebot.TeleBot(API_TOKEN, num_threads=20, exception_handler=MyExceptionHandler())
 
 
 COINGECKO_API_KEY = os.environ.get("COINGECKO_API_KEY")
