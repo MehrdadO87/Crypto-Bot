@@ -23,4 +23,9 @@ core.database.create_tables()
 register_handlers(bot)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
-bot.infinity_polling()
+
+def run_bot():
+    bot.infinity_polling()
+
+if __name__ == "__main__":
+    run_bot()
