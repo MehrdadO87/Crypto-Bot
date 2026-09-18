@@ -279,13 +279,17 @@ def register_handlers(bot: TeleBot):
 
     @bot.callback_query_handler(func=lambda call: call.data == "check_membership")
     def check_membership(call):
-        
-    
         if is_user_member(bot, call.from_user.id):
-            bot.answer_callback_query(call.id,"✅ Membership confirmed!")
-            keyboardd = get_main_keyboard(call.from_user.id)
-            bot.send_message(call.message.chat.id,"✅ You can now use Crypto Mehrdad.", reply_markup=keyboardd)
+            bot.answer_callback_query(call.id, "✅ Membership confirmed!")
 
+            user_id = call.from_user.id
+            user_name = call.from_user.username
+            user_fname = call.from_user.first_name
+            user_lname = call.from_user.last_name
+            core.query.insert_user(user_id, user_name, user_fname, user_lname)
+
+            keyboardd = get_main_keyboard(user_id)
+            bot.send_message(call.message.chat.id,"✅ You can now use Crypto Mehrdad.", reply_markup=keyboardd)
         else:
             bot.answer_callback_query(call.id,"❌ You haven't joined the channel yet.",show_alert=True)
 
