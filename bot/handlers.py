@@ -47,7 +47,6 @@ def format_change(change):
         return "➖ ⚪ 0.00%"
 
 
-
 def register_handlers(bot: TeleBot):
     def anti_spam(message):
         user_id = message.from_user.id
@@ -62,42 +61,53 @@ def register_handlers(bot: TeleBot):
         return True
 
     
-    @bot.message_handler(commands=['start'])
-    def start_handler(message):
-        
-        if not anti_spam(message):
-            return
-        
+    def is_private(message):
+        return message.chat.type == "private"
+
+    def check_access(message):
         if not is_user_member(bot, message.from_user.id):
             bot.send_message(
                 message.chat.id,
                 "🔒 To use Crypto Mehrdad, please join our channel first.",
                 reply_markup=join_channel_markup()
             )
+            return False
+        return True
+
+    
+    @bot.message_handler(commands=['start'])
+    def start_handler(message):
+        if not anti_spam(message):
             return
-        
+        if not check_access(message):
+            return
+
         user_id = message.from_user.id
         user_name = message.from_user.username
         user_fname = message.from_user.first_name
         user_lname = message.from_user.last_name
+        core.query.insert_user(user_id, user_name, user_fname, user_lname)
 
-        core.query.insert_user(user_id,user_name,user_fname,user_lname)
+        if is_private(message):
+            markup = get_main_keyboard(user_id)
+            bot.send_message(message.chat.id, """Welcome to Crypto Mehrdad!👋
 
-        markup = get_main_keyboard(user_id)
-        bot.send_message(message.chat.id, """Welcome to Crypto Mehrdad!👋
+        📈 Get the latest cryptocurrency prices quickly and easily.
 
-    📈 Get the latest cryptocurrency prices quickly and easily.
-
-    - Check the top 5 cryptocurrencies
-    - View real-time prices
-    - Simple and fast
-
-    Use the buttons below to get started.""", reply_markup=markup)
+        Use the buttons below to get started.""", reply_markup=markup)
+        else:
+            bot.send_message(message.chat.id,
+                "Welcome to Crypto Mehrdad!👋\n\n"
+                "دستورات قابل استفاده تو گروه:\n"
+                "/price — قیمت ۵ ارز برتر\n"
+                "/search <نام کوین> — جستجوی کوین\n"
+                "/account — مشاهده‌ی اکانت\n"
+                "/register — ثبت‌نام (تو پیوی)\n"
+                "/help — راهنما")
 
     @bot.message_handler(commands=['help'])
     def help_handler(message):
-        if not is_user_member(bot, message.from_user.id):
-            bot.send_message(message.chat.id,"🔒 To use Crypto Mehrdad, please join our channel first.",reply_markup=join_channel_markup())
+        if not check_access(message):
             return
         
         message_help = ("📖 Help\n\n"
@@ -216,10 +226,13 @@ def register_handlers(bot: TeleBot):
 
     @bot.message_handler(content_types=["contact"])
     def contact_handler(message):
-
         if not anti_spam(message):
-                    return
-        
+            return
+
+        if not is_private(message):
+            bot.send_message(message.chat.id, "⚠️ لطفاً شماره تلفنت رو فقط تو پیوی ربات شیر کن، نه تو گروه.")
+            return
+
         user_id = message.from_user.id
         username = message.from_user.username
         if username:
@@ -379,3 +392,54 @@ def register_handlers(bot: TeleBot):
             f"📊 1M: {format_change(change_30d)}\n"
             f"📊 1Y: {format_change(change_1y)}")
         bot.send_message(message.chat.id,message_text, reply_markup=get_main_keyboard(message.from_user.id))
+
+
+    @bot.message_handler(commands=['price'])
+    def price_command(message):
+        if not anti_spam(message):
+            return
+        if not check_access(message):
+            return
+        prices_handler(message)
+
+
+    @bot.message_handler(commands=['search'])
+    def search_command(message):
+        if not anti_spam(message):
+            return
+        if not check_access(message):
+            return
+
+        parts = message.text.split(maxsplit=1)
+        if len(parts) < 2:
+            bot.send_message(message.chat.id, "❌ Usage: /search <coin name or symbol>")
+            return
+
+        message.text = parts[1].strip()
+        process_search(message)
+
+
+    @bot.message_handler(commands=['account'])
+    def account_command(message):
+        if not anti_spam(message):
+            return
+        if not check_access(message):
+            return
+        myaccount_handler(message)
+
+
+    @bot.message_handler(commands=['register'])
+    def register_command(message):
+        if not anti_spam(message):
+            return
+        if not check_access(message):
+            return
+
+        if is_private(message):
+            register_handler(message)
+        else:
+            bot_username = bot.get_me().username
+            bot.send_message(
+                message.chat.id,
+                f"📱 برای ثبت‌نام و ارسال شماره تلفن، لطفاً به پیوی ربات پیام بده:\n@{bot_username}"
+            )
